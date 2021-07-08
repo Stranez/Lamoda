@@ -76,11 +76,11 @@ const getData = async () => { // async асинхронная функция
     }
 };
 
-const getGoods = (callback, value) => {
+const getGoods = (callback, prop, value) => {
     getData()
         .then(data => {//then функция, вызовет колбек функцию когда getData отработает
             if(value){
-                callback(data.filter(item => item.category === value));
+                callback(data.filter(item => item[prop] === value));
             } else{
                 callback(data); // callback будет вызвана в тот момент когда мы получим товары сервера
             }
@@ -93,30 +93,18 @@ const getGoods = (callback, value) => {
 
 
 // херь не понятная начало
-
+// страница категорий
 try{
     const goodsList = document.querySelector('.goods__list');
 
-    if(!goodsList){
+    if(!goodsList){ // сработает если на странице нет списка goodsList
         throw 'это не страница с товарами';
     }
 // переключение заголовка начало
-    const toggleGoodsTitle = (category) => {
-        const goodsTitle = document.querySelector('.goods__title');
-        let title = '';
-        switch(category) {
-            case 'men': 
-                title = 'Мужчинам';
-                break;
-            case 'women':
-                title = 'Женщинам';
-                break;
-            case 'kids': 
-                title = 'Детям';
-                break;  
-          }
-        goodsTitle.textContent = title;
+    const goodsTitle = document.querySelector('.goods__title');
 
+    const changeTitle = () => {
+        goodsTitle.textContent = document.querySelector(`[href*="#${hash}"]`).textContent;
     };
 //переключение заголовка конец
 
@@ -158,15 +146,79 @@ try{
 
     window.addEventListener('hashchange', () =>{
         hash = location.hash.substring(1);
-        getGoods(renderGoodsList, hash);
-        toggleGoodsTitle(hash); //моя
+        getGoods(renderGoodsList, 'category', hash);
+        changeTitle(); //моя
     });
 
-    getGoods(renderGoodsList, hash);
-    toggleGoodsTitle(hash); //моя
+    getGoods(renderGoodsList, 'category', hash);
+    changeTitle(); //моя
 
 } catch (err){
     console.warn(err);
 }
-
 // херь не понятная конец
+
+//страница товара
+
+try{
+    if(document.querySelector('.card__good')){
+        throw 'это не card__good';
+    }
+    const cardGoodImage = document.querySelector('.card-good__image');
+    const cardGoodBrand = document.querySelector('.card-good__brand');
+    const cardGoodTitle = document.querySelector('.card-good__title');
+    const cardGoodPrice = document.querySelector('.card-good__price');
+    const cardGoodColor = document.querySelector('.card-good__color');
+    const cardGoodSelectWrapper = document.querySelectorAll('.card-good__select__wrapper');
+    const cardGoodColorList = document.querySelector('.card-good__color-list');
+    const cardGoodSizes = document.querySelector('.card-good__sizes');
+    const cardGoodSizesList = document.querySelector('.card-good__sizes-list');
+    const cardGoodBuy = document.querySelector('.card-good__buy');
+
+    const generateList = data => data.reduce((html, item, i) => html + 
+    `<li class="card-good__select-item" data-id="${i}">${item}</li>`, '');
+
+    const renderCardGood = ([{ brand, name, cost, color, sizes, photo }]) => {
+        cardGoodImage.src = `goods-image/${photo}`;
+        cardGoodImage.alt = `${brand} ${name}`;
+        cardGoodBrand.textContent = brand;
+        cardGoodTitle.textContent = name;
+        cardGoodPrice.textContent = `${cost} ₽`;
+        if(color){
+            cardGoodColor.textContent = color[0];
+            cardGoodColor.dataset.id = 0;
+            cardGoodColorList.innerHTML = generateList(color);
+        }else{
+            cardGoodColor.style.display = 'none';
+        }
+
+        if(sizes){
+            cardGoodSizes.textContent = sizes[0];
+            cardGoodSizes.dataset.id = 0;
+            cardGoodSizesList.innerHTML = generateList(sizes);
+        }else{
+            cardGoodSizes.style.display = 'none';
+        }
+    };
+
+    cardGoodSelectWrapper.forEach(item => {
+        item.addEventListener('click', (e) => {
+            const target = e.target;
+
+            if(target.closest('.card-good__select')){
+                target.classList.toggle('card-good__select__open');
+            }
+            if(target.closest('.card-good__select-item')){
+                const cardGoodSelect = item.querySelector('.card-good__select');
+                cardGoodSelect.textContent = target.textContent;
+                cardGoodSelect.dataset.id = target.dataset.id;
+                cardGoodSelect.classList.remove('card-good__select__open');
+            }
+        });
+    });
+
+    getGoods(renderCardGood, 'id', hash);
+
+} catch(err){
+    console.warn(err);
+}
