@@ -211,7 +211,7 @@ try{
 //страница товара
 
 try{
-    if(document.querySelector('.card__good')){
+    if(!document.querySelector('.card__good')){
         throw 'это не card__good';
     }
     const cardGoodImage = document.querySelector('.card-good__image');
@@ -233,7 +233,6 @@ try{
         const data = { brand, name, cost ,id };
 
         cardGoodImage.src = `goods-image/${photo}`;
-        console.dir(cardGoodImage.src);
         cardGoodImage.alt = `${brand} ${name}`;
         cardGoodBrand.textContent = brand;
         cardGoodTitle.textContent = name;
